@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Grade;
 
+use App\Models\Grade;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateGradeRequest extends FormRequest
@@ -14,9 +15,14 @@ class UpdateGradeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'midterm' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'finals' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'final_grade' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'grade' => [
+                'required',
+                function ($attribute, $value, $fail) {
+                    if (!Grade::isValidGrade($value)) {
+                        $fail('The grade must be between 1.00 and 5.00 and increment by 0.25, or INC for incomplete.');
+                    }
+                },
+            ],
             'remarks' => ['nullable', 'string'],
         ];
     }
@@ -24,12 +30,7 @@ class UpdateGradeRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'midterm.min' => 'The midterm grade cannot be less than 0.',
-            'midterm.max' => 'The midterm grade cannot be more than 100.',
-            'finals.min' => 'The finals grade cannot be less than 0.',
-            'finals.max' => 'The finals grade cannot be more than 100.',
-            'final_grade.min' => 'The final grade cannot be less than 0.',
-            'final_grade.max' => 'The final grade cannot be more than 100.',
+            'grade.required' => 'The grade is required.',
         ];
     }
 } 

@@ -13,50 +13,116 @@ class GradeController extends Controller
 {
     public function index()
     {
-        $grades = Grade::with(['enrollment.user', 'enrollment.subject'])
-            ->latest()
-            ->paginate(10);
+        $grades = Grade::with([
+            'enrollment' => function($query) {
+                $query->withTrashed(); // Include soft-deleted enrollments for reference
+            },
+            'enrollment.user' => function($query) {
+                $query->whereNotNull('role'); // Only users who are still students
+            },
+            'enrollment.subjects' => function($query) {
+                $query->withTrashed(); // Include soft-deleted subjects
+            }
+        ])
+        ->whereHas('enrollment', function($query) {
+            $query->whereNull('deleted_at') // Only active enrollments
+                ->whereHas('user', function($q) {
+                    $q->whereNotNull('role'); // Only active students
+                });
+        })
+        ->latest()
+        ->paginate(10);
+
         return view('admin.grades.index', compact('grades'));
     }
 
     public function create()
     {
-        $enrollments = Enrollment::with(['user', 'subject'])
-            ->whereDoesntHave('grades')
+        // Get all enrollments that have at least one subject without a grade
+        $enrollments = Enrollment::with(['user', 'subjects', 'grades'])
+            ->whereHas('user', function($query) {
+                $query->whereNotNull('role'); // Only active students
+            })
             ->where('status', 'enrolled')
             ->get()
+            ->filter(function ($enrollment) {
+                // Check if there are any subjects without grades
+                return $enrollment->subjects->some(function ($subject) use ($enrollment) {
+                    // Check if this subject doesn't have a grade yet
+                    return !$enrollment->grades->where('subject_id', $subject->id)->count();
+                });
+            })
             ->sortBy('user.name');
 
-        return view('admin.grades.create', compact('enrollments'));
+        // Flatten enrollments to show each subject that doesn't have a grade yet
+        $enrollmentSubjects = collect();
+        foreach ($enrollments as $enrollment) {
+            // Get subjects that don't have grades yet
+            $subjectsWithoutGrades = $enrollment->subjects->filter(function ($subject) use ($enrollment) {
+                return !$enrollment->grades->where('subject_id', $subject->id)->count();
+            });
+
+            foreach ($subjectsWithoutGrades as $subject) {
+                $enrollmentSubjects->push([
+                    'id' => $enrollment->id,
+                    'subject_id' => $subject->id,
+                    'student_name' => $enrollment->user->name,
+                    'subject_name' => $subject->name,
+                    'subject_code' => $subject->code
+                ]);
+            }
+        }
+
+        return view('admin.grades.create', [
+            'enrollmentSubjects' => $enrollmentSubjects
+        ]);
     }
 
-    public function store(Request $request)
+    public function store(StoreGradeRequest $request)
     {
-        $request->validate([
-            'enrollment_id' => ['required', 'exists:enrollments,id'],
-            'midterm' => ['required', 'numeric', 'min:1.00', 'max:5.00'],
-            'finals' => ['required', 'numeric', 'min:1.00', 'max:5.00'],
-            'remarks' => ['nullable', 'string'],
-        ]);
-
         try {
-            if (Grade::where('enrollment_id', $request->enrollment_id)->exists()) {
-                return back()->with('error', 'Grade already exists for this enrollment.')
+            if (Grade::where('enrollment_id', $request->enrollment_id)
+                    ->where('subject_id', $request->subject_id)
+                    ->exists()) {
+                return back()->with('error', 'Grade already exists for this subject in this enrollment.')
                     ->withInput();
             }
 
             $enrollment = Enrollment::findOrFail($request->enrollment_id);
             
+            // Verify that the subject belongs to the enrollment
+            if (!$enrollment->subjects()->where('subjects.id', $request->subject_id)->exists()) {
+                return back()->with('error', 'Selected subject is not part of this enrollment.')
+                    ->withInput();
+            }
+            
             $grade = Grade::create([
                 'enrollment_id' => $request->enrollment_id,
-                'midterm' => $request->midterm,
-                'finals' => $request->finals,
+                'subject_id' => $request->subject_id,
+                'grade' => $request->grade,
                 'remarks' => $request->remarks,
             ]);
 
-            // Update enrollment status based on finals grade
-            if ($request->finals <= 3.00) {
-                $enrollment->update(['status' => 'completed']);
+            // Update enrollment status if all subjects have passing grades
+            $allSubjectsGraded = $enrollment->subjects()
+                ->whereNotExists(function ($query) {
+                    $query->from('grades')
+                        ->whereColumn('grades.subject_id', 'subjects.id')
+                        ->whereColumn('grades.enrollment_id', 'enrollment_subjects.enrollment_id');
+                })
+                ->doesntExist();
+
+            if ($allSubjectsGraded) {
+                $allPassing = Grade::where('enrollment_id', $enrollment->id)
+                    ->where(function($query) {
+                        $query->where('grade', '<=', 3.00)
+                              ->whereNotIn('grade', ['INC']);
+                    })
+                    ->count() === $enrollment->subjects()->count();
+                
+                if ($allPassing) {
+                    $enrollment->update(['status' => 'completed']);
+                }
             }
 
             return redirect()->route('admin.grades.index')
@@ -69,30 +135,42 @@ class GradeController extends Controller
 
     public function show(Grade $grade)
     {
-        $grade->load(['enrollment.user', 'enrollment.subject']);
+        $grade->load(['enrollment.user', 'enrollment.subjects']);
         return view('admin.grades.show', compact('grade'));
     }
 
     public function edit(Grade $grade)
     {
-        $grade->load(['enrollment.user', 'enrollment.subject']);
+        $grade->load(['enrollment.user', 'enrollment.subjects']);
         return view('admin.grades.edit', compact('grade'));
     }
 
-    public function update(Request $request, Grade $grade)
+    public function update(UpdateGradeRequest $request, Grade $grade)
     {
-        $validated = $request->validate([
-            'midterm' => ['required', 'numeric', 'min:1.00', 'max:5.00'],
-            'finals' => ['required', 'numeric', 'min:1.00', 'max:5.00'],
-            'remarks' => ['nullable', 'string'],
-        ]);
-
         try {
-            $grade->update($validated);
+            $grade->update($request->validated());
 
-            // Update enrollment status based on finals grade
-            if ($grade->finals <= 3.00) {
-                $grade->enrollment->update(['status' => 'completed']);
+            // Update enrollment status if all subjects have passing grades
+            $enrollment = $grade->enrollment;
+            $allSubjectsGraded = $enrollment->subjects()
+                ->whereNotExists(function ($query) {
+                    $query->from('grades')
+                        ->whereColumn('grades.subject_id', 'subjects.id')
+                        ->whereColumn('grades.enrollment_id', 'enrollment_subjects.enrollment_id');
+                })
+                ->doesntExist();
+
+            if ($allSubjectsGraded) {
+                $allPassing = Grade::where('enrollment_id', $enrollment->id)
+                    ->where(function($query) {
+                        $query->where('grade', '<=', 3.00)
+                              ->whereNotIn('grade', ['INC']);
+                    })
+                    ->count() === $enrollment->subjects()->count();
+                
+                if ($allPassing) {
+                    $enrollment->update(['status' => 'completed']);
+                }
             }
 
             return redirect()->route('admin.grades.index')

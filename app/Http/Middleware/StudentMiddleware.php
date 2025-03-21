@@ -12,7 +12,7 @@ class StudentMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::check() || !Auth::user()->isStudent()) {
-            return redirect()->route('login');
+            return redirect()->route('dashboard')->with('error', 'Unauthorized access.');
         }
 
         return $next($request);

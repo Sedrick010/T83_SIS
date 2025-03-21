@@ -1,103 +1,151 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Manage Grades') }}
-            </h2>
-            <a href="{{ route('admin.grades.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Add New Grade
-            </a>
-        </div>
-    </x-slot>
+@extends('layouts.pageTemplate')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    @if(session('success'))
-                        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                            <span class="block sm:inline">{{ session('success') }}</span>
-                        </div>
-                    @endif
+@section('title', 'Manage Grades')
 
-                    @if(session('error'))
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                            <span class="block sm:inline">{{ session('error') }}</span>
-                        </div>
-                    @endif
+@section('content')
+<div class="row">
+    <div class="col-12">
+        <div class="card my-4">
+            <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3 d-flex justify-content-between align-items-center">
+                    <h6 class="text-white text-capitalize ps-3 mb-0">Grades List</h6>
+                    <a href="{{ route('admin.grades.create') }}" class="btn btn-sm bg-gradient-dark mb-0 me-3">
+                        <i class="material-symbols-rounded text-sm">add</i>&nbsp;&nbsp;Add New Grade
+                    </a>
+                </div>
+            </div>
+            <div class="card-body px-0 pb-2">
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible text-white mx-3" role="alert">
+                        <span class="text-sm">{{ session('success') }}</span>
+                        <button type="button" class="btn-close text-lg py-3 opacity-10" data-bs-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full table-auto">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="px-4 py-2 text-left">ID</th>
-                                    <th class="px-4 py-2 text-left">Student</th>
-                                    <th class="px-4 py-2 text-left">Subject</th>
-                                    <th class="px-4 py-2 text-left">Grade</th>
-                                    <th class="px-4 py-2 text-left">Academic Year</th>
-                                    <th class="px-4 py-2 text-left">Semester</th>
-                                    <th class="px-4 py-2 text-left">Remarks</th>
-                                    <th class="px-4 py-2 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($grades as $grade)
-                                    <tr class="border-b">
-                                        <td class="px-4 py-2">{{ $grade->id }}</td>
-                                        <td class="px-4 py-2">{{ $grade->enrollment->user->name }}</td>
-                                        <td class="px-4 py-2">{{ $grade->enrollment->subject->name }}</td>
-                                        <td class="px-4 py-2">
-                                            <span class="px-2 py-1 rounded text-white {{ $grade->getGradeColor() }}">
-                                                Midterm: {{ number_format($grade->midterm, 2) }}
-                                                <br>
-                                                Finals: {{ number_format($grade->finals, 2) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-2">{{ $grade->enrollment->academic_year }}</td>
-                                        <td class="px-4 py-2">{{ $grade->enrollment->semester }}</td>
-                                        <td class="px-4 py-2">
-                                            <span class="font-semibold {{ $grade->getRemarks() === 'PASSED' ? 'text-green-600' : 'text-red-600' }}">
-                                                {{ $grade->getRemarks() }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-2 text-center">
-                                            <div class="flex justify-center space-x-2">
-                                                <a href="{{ route('admin.grades.show', $grade) }}" 
-                                                   class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded">
-                                                    View
-                                                </a>
-                                                <a href="{{ route('admin.grades.edit', $grade) }}" 
-                                                   class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded">
-                                                    Edit
-                                                </a>
-                                                <form action="{{ route('admin.grades.destroy', $grade) }}" 
-                                                      method="POST" 
-                                                      class="inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" 
-                                                            class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded"
-                                                            onclick="return confirm('Are you sure you want to delete this grade?')">
-                                                        Delete
-                                                    </button>
-                                                </form>
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible text-white mx-3" role="alert">
+                        <span class="text-sm">{{ session('error') }}</span>
+                        <button type="button" class="btn-close text-lg py-3 opacity-10" data-bs-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
+
+                <div class="table-responsive p-0">
+                    <table class="table align-items-center mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Student</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Subject</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Academic Year</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Semester</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Grade</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($grades as $grade)
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-3 py-1">
+                                            <div class="d-flex flex-column justify-content-center">
+                                                @if($grade->enrollment->user)
+                                                    <h6 class="mb-0 text-sm">{{ $grade->enrollment->user->name }}</h6>
+                                                    @if($grade->enrollment->user->student)
+                                                        <p class="text-xs text-secondary mb-0">{{ $grade->enrollment->user->student->student_id_number }}</p>
+                                                    @else
+                                                        <p class="text-xs text-danger mb-0">Student record deleted</p>
+                                                    @endif
+                                                @else
+                                                    <h6 class="mb-0 text-sm text-danger">Deleted Student</h6>
+                                                @endif
                                             </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="8" class="px-4 py-2 text-center">No grades found.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @php
+                                            $subject = $grade->enrollment->subjects->where('id', $grade->subject_id)->first();
+                                        @endphp
+                                        @if($subject)
+                                            <p class="text-xs font-weight-bold mb-0">{{ $subject->code }}</p>
+                                            <p class="text-xs text-secondary mb-0">{{ $subject->name }}</p>
+                                            @if($subject->trashed())
+                                                <span class="badge badge-sm bg-gradient-warning">Subject Archived</span>
+                                            @endif
+                                        @else
+                                            <p class="text-xs text-danger mb-0">Subject not found</p>
+                                            <p class="text-xs text-secondary mb-0">ID: {{ $grade->subject_id }}</p>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ $grade->enrollment->academic_year }}</p>
+                                        @if($grade->enrollment->trashed())
+                                            <span class="badge badge-sm bg-gradient-warning">Enrollment Archived</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ $grade->enrollment->semester }}</p>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-sm {{ $grade->grade === 'INC' ? 'bg-gradient-warning' : ($grade->grade <= 3.00 ? 'bg-gradient-success' : 'bg-gradient-danger') }}">
+                                            @if($grade->grade === 'INC')
+                                                INC
+                                            @else
+                                                {{ number_format((float)$grade->grade, 2) }}
+                                            @endif
+                                        </span>
+                                        @if($grade->remarks)
+                                            <p class="text-xs text-secondary mb-0">{{ $grade->remarks }}</p>
+                                        @endif
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <a href="{{ route('admin.grades.show', $grade) }}" class="btn btn-info btn-sm px-3 py-1 me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="View Details">
+                                            <i class="material-symbols-rounded text-sm">visibility</i>
+                                        </a>
+                                        @if(!$grade->enrollment->trashed() && $grade->enrollment->user && $grade->enrollment->user->role === 'student')
+                                            <a href="{{ route('admin.grades.edit', $grade) }}" class="btn btn-warning btn-sm px-3 py-1 me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Grade">
+                                                <i class="material-symbols-rounded text-sm">edit</i>
+                                            </a>
+                                            <form action="{{ route('admin.grades.destroy', $grade) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm px-3 py-1" 
+                                                        onclick="return confirm('Are you sure you want to delete this grade?')"
+                                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Delete Grade">
+                                                    <i class="material-symbols-rounded text-sm">delete</i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <p class="text-sm mb-0">No grades found.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
-                    <div class="mt-4">
-                        {{ $grades->links() }}
-                    </div>
+                <div class="px-3 pt-4">
+                    {{ $grades->links() }}
                 </div>
             </div>
         </div>
     </div>
-</x-app-layout> 
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+@endpush 

@@ -27,10 +27,10 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'status',
         'student_number',
         'course',
         'year_level',
-        'status',
     ];
 
     /**
@@ -48,13 +48,25 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    /**
+     * Get the student record associated with the user.
+     */
+    public function student()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'year_level' => 'integer',
-        ];
+        return $this->hasOne(Student::class);
+    }
+
+    /**
+     * Check if the user has a student record.
+     */
+    public function isStudent()
+    {
+        return $this->role === self::ROLE_STUDENT || $this->student()->exists();
     }
 
     public function enrollments(): HasMany
@@ -70,11 +82,6 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
-    }
-
-    public function isStudent(): bool
-    {
-        return $this->role === self::ROLE_STUDENT;
     }
 
     public function hasRole(string $role): bool

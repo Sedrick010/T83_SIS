@@ -1,88 +1,155 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Edit Student') }}
-            </h2>
-        </div>
-    </x-slot>
+@extends('layouts.pageTemplate')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <form method="POST" action="{{ route('admin.students.update', $student) }}" class="space-y-6">
-                        @csrf
-                        @method('PUT')
+@section('title', 'Edit Student')
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Student Number -->
-                            <div>
-                                <x-input-label for="student_number" :value="__('Student Number')" />
-                                <x-text-input id="student_number" name="student_number" type="text" class="mt-1 block w-full" :value="old('student_number', $student->student_number)" required />
-                                <x-input-error :messages="$errors->get('student_number')" class="mt-2" />
-                            </div>
-
-                            <!-- Name -->
-                            <div>
-                                <x-input-label for="name" :value="__('Name')" />
-                                <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $student->name)" required />
-                                <x-input-error :messages="$errors->get('name')" class="mt-2" />
-                            </div>
-
-                            <!-- Email -->
-                            <div>
-                                <x-input-label for="email" :value="__('Email')" />
-                                <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $student->email)" required />
-                                <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                            </div>
-
-                            <!-- Course -->
-                            <div>
-                                <x-input-label for="course" :value="__('Course')" />
-                                <x-text-input id="course" name="course" type="text" class="mt-1 block w-full" :value="old('course', $student->course)" required />
-                                <x-input-error :messages="$errors->get('course')" class="mt-2" />
-                            </div>
-
-                            <!-- Year Level -->
-                            <div>
-                                <x-input-label for="year_level" :value="__('Year Level')" />
-                                <select id="year_level" name="year_level" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                                    @for ($i = 1; $i <= 4; $i++)
-                                        <option value="{{ $i }}" {{ old('year_level', $student->year_level) == $i ? 'selected' : '' }}>{{ $i }}</option>
-                                    @endfor
-                                </select>
-                                <x-input-error :messages="$errors->get('year_level')" class="mt-2" />
-                            </div>
-
-                            <!-- Status -->
-                            <div>
-                                <x-input-label for="status" :value="__('Status')" />
-                                <select id="status" name="status" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                                    <option value="active" {{ old('status', $student->status) === 'active' ? 'selected' : '' }}>Active</option>
-                                    <option value="inactive" {{ old('status', $student->status) === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                </select>
-                                <x-input-error :messages="$errors->get('status')" class="mt-2" />
-                            </div>
-
-                            <!-- Password -->
-                            <div>
-                                <x-input-label for="password" :value="__('Password')" />
-                                <x-text-input id="password" name="password" type="password" class="mt-1 block w-full" />
-                                <p class="mt-1 text-sm text-gray-500">Leave blank to keep current password</p>
-                                <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-4 mt-4">
-                            <x-primary-button>{{ __('Update Student') }}</x-primary-button>
-                            <a href="{{ route('admin.students.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-                                {{ __('Cancel') }}
-                            </a>
-                        </div>
-                    </form>
+@section('content')
+<div class="row">
+    <div class="col-12">
+        <div class="card my-4">
+            <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+                    <h6 class="text-white text-capitalize ps-3 mb-0">Edit Student</h6>
                 </div>
+            </div>
+            <div class="card-body">
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible text-white" role="alert">
+                        <span class="text-sm">{{ session('success') }}</span>
+                        <button type="button" class="btn-close text-lg py-3 opacity-10" data-bs-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
+
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible text-white" role="alert">
+                        <span class="text-sm">{{ session('error') }}</span>
+                        <button type="button" class="btn-close text-lg py-3 opacity-10" data-bs-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
+                
+                <form method="POST" action="{{ route('admin.students.update', $student) }}" class="row g-3">
+                    @csrf
+                    @method('PUT')
+                    
+                    <div class="col-md-6">
+                        <div class="input-group input-group-static mb-4">
+                            <label for="student_number">Student Number</label>
+                            <input type="text" class="form-control" name="student_number" value="{{ old('student_number', $student->student_number) }}" required>
+                            @error('student_number')
+                                <span class="text-danger text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="input-group input-group-static mb-4">
+                            <label for="name">Name</label>
+                            <input type="text" class="form-control" name="name" value="{{ old('name', $student->name) }}" required>
+                            @error('name')
+                                <span class="text-danger text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="input-group input-group-static mb-4">
+                            <label for="email">Email</label>
+                            <input type="email" class="form-control" name="email" value="{{ old('email', $student->email) }}" required>
+                            @error('email')
+                                <span class="text-danger text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="input-group input-group-static mb-4">
+                            <label for="course">Course</label>
+                            <input type="text" class="form-control" name="course" value="{{ old('course', $student->course) }}" required>
+                            @error('course')
+                                <span class="text-danger text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="input-group input-group-static mb-4">
+                            <label for="year_level" class="ms-0">Year Level</label>
+                            <select class="form-control" id="year_level" name="year_level" required>
+                                @for ($i = 1; $i <= 4; $i++)
+                                    @php
+                                        $suffix = match($i) {
+                                            1 => 'st',
+                                            2 => 'nd',
+                                            3 => 'rd',
+                                            default => 'th'
+                                        };
+                                    @endphp
+                                    <option value="{{ $i }}" {{ old('year_level', $student->year_level) == $i ? 'selected' : '' }}>{{ $i }}{{ $suffix }} Year</option>
+                                @endfor
+                            </select>
+                            @error('year_level')
+                                <span class="text-danger text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="input-group input-group-static mb-4">
+                            <label for="status" class="ms-0">Status</label>
+                            <select class="form-control" id="status" name="status" required>
+                                <option value="active" {{ old('status', $student->status) === 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="inactive" {{ old('status', $student->status) === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                            @error('status')
+                                <span class="text-danger text-xs">{{ $message }}</span>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="input-group input-group-outline my-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" class="form-control" name="password">
+                        </div>
+                        <p class="text-secondary text-xs mt-1">Leave blank to keep current password</p>
+                        @error('password')
+                            <span class="text-danger text-xs">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="col-12">
+                        <button type="submit" class="btn bg-gradient-primary">Update Student</button>
+                        <a href="{{ route('admin.students.index') }}" class="btn bg-gradient-secondary">Cancel</a>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
-</x-app-layout> 
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    // Handle input focus for outline inputs
+    const inputs = document.querySelectorAll('.input-group-outline .form-control');
+    inputs.forEach(input => {
+        if (input.value !== '') {
+            input.parentElement.classList.add('is-filled');
+        }
+        input.addEventListener('focus', () => {
+            input.parentElement.classList.add('is-focused');
+        });
+        input.addEventListener('blur', () => {
+            input.parentElement.classList.remove('is-focused');
+            if (input.value !== '') {
+                input.parentElement.classList.add('is-filled');
+            } else {
+                input.parentElement.classList.remove('is-filled');
+            }
+        });
+    });
+</script>
+@endpush 

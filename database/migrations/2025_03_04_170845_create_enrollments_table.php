@@ -14,15 +14,15 @@ return new class extends Migration
         Schema::create('enrollments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('subject_id')->constrained()->onDelete('cascade');
             $table->string('academic_year');
             $table->enum('semester', ['1st', '2nd', 'Summer']);
             $table->enum('status', ['enrolled', 'dropped', 'completed'])->default('enrolled');
+            $table->text('notes')->nullable();
             $table->timestamps();
             $table->softDeletes();
             
-            // Prevent duplicate enrollments
-            $table->unique(['user_id', 'subject_id', 'academic_year', 'semester']);
+            // Prevent duplicate enrollments for same student in same semester
+            $table->unique(['user_id', 'academic_year', 'semester']);
         });
     }
 

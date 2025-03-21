@@ -1,169 +1,132 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Manage Enrollments') }}
-            </h2>
-            <a href="{{ route('admin.enrollments.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                Add New Enrollment
-            </a>
-        </div>
-    </x-slot>
+@extends('layouts.pageTemplate')
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    @if(session('success'))
-                        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                            <span class="block sm:inline">{{ session('success') }}</span>
-                        </div>
-                    @endif
+@section('title', 'Manage Enrollments')
 
-                    @if(session('error'))
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-                            <span class="block sm:inline">{{ session('error') }}</span>
-                        </div>
-                    @endif
-
-                    <!-- Filters -->
-                    <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                            <label for="student_filter" class="block text-sm font-medium text-gray-700">Student</label>
-                            <select id="student_filter" name="student" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="">All Students</option>
-                                @foreach($students as $student)
-                                    <option value="{{ $student->id }}" {{ request('student') == $student->id ? 'selected' : '' }}>
-                                        {{ $student->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="academic_year_filter" class="block text-sm font-medium text-gray-700">Academic Year</label>
-                            <select id="academic_year_filter" name="academic_year" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="">All Years</option>
-                                @foreach($academicYears as $year)
-                                    <option value="{{ $year }}" {{ request('academic_year') == $year ? 'selected' : '' }}>
-                                        {{ $year }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div>
-                            <label for="semester_filter" class="block text-sm font-medium text-gray-700">Semester</label>
-                            <select id="semester_filter" name="semester" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                <option value="">All Semesters</option>
-                                <option value="1st" {{ request('semester') == '1st' ? 'selected' : '' }}>1st</option>
-                                <option value="2nd" {{ request('semester') == '2nd' ? 'selected' : '' }}>2nd</option>
-                                <option value="Summer" {{ request('semester') == 'Summer' ? 'selected' : '' }}>Summer</option>
-                            </select>
-                        </div>
+@section('content')
+<div class="row">
+    <div class="col-12">
+        <div class="card my-4">
+            <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3 d-flex justify-content-between align-items-center">
+                    <h6 class="text-white text-capitalize ps-3 mb-0">Enrollments List</h6>
+                    <div class="me-3">
+                        <a href="{{ route('admin.enrollments.history') }}" class="btn btn-sm bg-gradient-dark mb-0 me-2">
+                            <i class="material-symbols-rounded text-sm">history</i>&nbsp;&nbsp;View History
+                        </a>
+                        <a href="{{ route('admin.enrollments.create') }}" class="btn btn-sm bg-gradient-dark mb-0">
+                            <i class="material-symbols-rounded text-sm">add</i>&nbsp;&nbsp;Add New Enrollment
+                        </a>
                     </div>
+                </div>
+            </div>
+            <div class="card-body px-0 pb-2">
+                @if(session('success'))
+                    <div class="alert alert-success alert-dismissible text-white mx-3" role="alert">
+                        <span class="text-sm">{{ session('success') }}</span>
+                        <button type="button" class="btn-close text-lg py-3 opacity-10" data-bs-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
 
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full table-auto">
-                            <thead>
-                                <tr class="bg-gray-100">
-                                    <th class="px-4 py-2 text-left">ID</th>
-                                    <th class="px-4 py-2 text-left">Student</th>
-                                    <th class="px-4 py-2 text-left">Subject</th>
-                                    <th class="px-4 py-2 text-left">Academic Year</th>
-                                    <th class="px-4 py-2 text-left">Semester</th>
-                                    <th class="px-4 py-2 text-left">Status</th>
-                                    <th class="px-4 py-2 text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php
-                                    $groupedEnrollments = $enrollments->groupBy(function($enrollment) {
-                                        return $enrollment->user_id . '-' . $enrollment->academic_year . '-' . $enrollment->semester;
-                                    });
-                                @endphp
+                @if(session('error'))
+                    <div class="alert alert-danger alert-dismissible text-white mx-3" role="alert">
+                        <span class="text-sm">{{ session('error') }}</span>
+                        <button type="button" class="btn-close text-lg py-3 opacity-10" data-bs-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                @endif
 
-                                @forelse($groupedEnrollments as $groupKey => $group)
-                                    @php
-                                        $firstEnrollment = $group->first();
-                                        $rowspan = $group->count();
-                                    @endphp
-                                    <tr class="border-b hover:bg-gray-50">
-                                        <td class="px-4 py-2" rowspan="{{ $rowspan }}">{{ $firstEnrollment->id }}</td>
-                                        <td class="px-4 py-2" rowspan="{{ $rowspan }}">
-                                            {{ $firstEnrollment->user->name }}
-                                            <div class="text-sm text-gray-500">{{ $firstEnrollment->user->student_number }}</div>
-                                        </td>
-                                        <td class="px-4 py-2">
-                                            {{ $firstEnrollment->subject->code }} - {{ $firstEnrollment->subject->name }}
-                                            <div class="text-sm text-gray-500">{{ $firstEnrollment->subject->units }} units</div>
-                                        </td>
-                                        <td class="px-4 py-2" rowspan="{{ $rowspan }}">{{ $firstEnrollment->academic_year }}</td>
-                                        <td class="px-4 py-2" rowspan="{{ $rowspan }}">{{ $firstEnrollment->semester }}</td>
-                                        <td class="px-4 py-2" rowspan="{{ $rowspan }}">
-                                            <span class="px-2 py-1 rounded text-white {{ $firstEnrollment->status === 'enrolled' ? 'bg-green-500' : 'bg-yellow-500' }}">
-                                                {{ ucfirst($firstEnrollment->status) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-2 text-center" rowspan="{{ $rowspan }}">
-                                            <div class="flex justify-center space-x-2">
-                                                <a href="{{ route('admin.enrollments.show', $firstEnrollment) }}" 
-                                                   class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded">
-                                                    View
-                                                </a>
-                                                <a href="{{ route('admin.enrollments.edit', $firstEnrollment) }}" 
-                                                   class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded">
-                                                    Edit
-                                                </a>
-                                                <form action="{{ route('admin.enrollments.destroy', $firstEnrollment) }}" 
-                                                      method="POST" 
-                                                      class="inline">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" 
-                                                            class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded"
-                                                            onclick="return confirm('Are you sure you want to delete this enrollment?')">
-                                                        Delete
-                                                    </button>
-                                                </form>
+                <div class="table-responsive p-0">
+                    <table class="table align-items-center mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Student</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Academic Year</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Semester</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Subjects</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Status</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($enrollments as $enrollment)
+                                <tr>
+                                    <td>
+                                        <div class="d-flex px-3 py-1">
+                                            <div class="d-flex flex-column justify-content-center">
+                                                <h6 class="mb-0 text-sm">{{ $enrollment->user->name }}</h6>
+                                                <p class="text-xs text-secondary mb-0">{{ $enrollment->user->student_number }}</p>
                                             </div>
-                                        </td>
-                                    </tr>
-                                    @foreach($group->skip(1) as $enrollment)
-                                        <tr class="border-b hover:bg-gray-50">
-                                            <td class="px-4 py-2">
-                                                {{ $enrollment->subject->code }} - {{ $enrollment->subject->name }}
-                                                <div class="text-sm text-gray-500">{{ $enrollment->subject->units }} units</div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @empty
-                                    <tr>
-                                        <td colspan="7" class="px-4 py-2 text-center">No enrollments found.</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ $enrollment->academic_year }}</p>
+                                    </td>
+                                    <td>
+                                        <p class="text-xs font-weight-bold mb-0">{{ $enrollment->semester }}</p>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            @foreach($enrollment->subjects as $subject)
+                                                <div class="mb-1">
+                                                    <p class="text-xs font-weight-bold mb-0">{{ $subject->code }}</p>
+                                                    <p class="text-xs text-secondary mb-0">{{ $subject->units }} units</p>
+                                                </div>
+                                            @endforeach
+                                            <p class="text-xs text-info mb-0">Total Units: {{ $enrollment->getTotalUnits() }}</p>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-sm {{ $enrollment->status === 'enrolled' ? 'bg-gradient-success' : ($enrollment->status === 'dropped' ? 'bg-gradient-danger' : 'bg-gradient-info') }}">
+                                            {{ ucfirst($enrollment->status) }}
+                                        </span>
+                                    </td>
+                                    <td class="align-middle text-center">
+                                        <a href="{{ route('admin.enrollments.show', $enrollment) }}" class="btn btn-info btn-sm px-3 py-1 me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="View Details">
+                                            <i class="material-symbols-rounded text-sm">visibility</i>
+                                        </a>
+                                        <a href="{{ route('admin.enrollments.edit', $enrollment) }}" class="btn btn-warning btn-sm px-3 py-1 me-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Edit Enrollment">
+                                            <i class="material-symbols-rounded text-sm">edit</i>
+                                        </a>
+                                        <form action="{{ route('admin.enrollments.destroy', $enrollment) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm px-3 py-1" 
+                                                    onclick="return confirm('Are you sure you want to delete this enrollment?')"
+                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Delete Enrollment">
+                                                <i class="material-symbols-rounded text-sm">delete</i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center">
+                                        <p class="text-sm mb-0">No enrollments found.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
 
-                    <div class="mt-4">
-                        {{ $enrollments->links() }}
-                    </div>
+                <div class="px-3 pt-4">
+                    {{ $enrollments->links() }}
                 </div>
             </div>
         </div>
     </div>
+</div>
+@endsection
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const filters = ['student_filter', 'academic_year_filter', 'semester_filter'];
-            filters.forEach(filterId => {
-                document.getElementById(filterId).addEventListener('change', function() {
-                    const params = new URLSearchParams(window.location.search);
-                    params.set(this.name, this.value);
-                    window.location.search = params.toString();
-                });
-            });
-        });
-    </script>
-</x-app-layout> 
+@push('scripts')
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+@endpush 

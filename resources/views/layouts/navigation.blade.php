@@ -15,6 +15,9 @@
                     <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('admin.students.registrations')" :active="request()->routeIs('admin.students.registrations')">
+                        {{ __('Registrations') }}
+                    </x-nav-link>
                     <x-nav-link :href="route('admin.students.index')" :active="request()->routeIs('admin.students.*')">
                         {{ __('Students') }}
                     </x-nav-link>
@@ -81,6 +84,9 @@
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
                 {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('admin.students.registrations')" :active="request()->routeIs('admin.students.registrations')">
+                {{ __('Registrations') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('admin.students.index')" :active="request()->routeIs('admin.students.*')">
                 {{ __('Students') }}

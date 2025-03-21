@@ -15,7 +15,7 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required',
@@ -26,5 +26,19 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
         ];
+
+        // Add student-specific rules if the field is present in the request
+        if ($this->has('student_number')) {
+            $rules['student_number'] = [
+                'required', 
+                'string', 
+                'max:255',
+                Rule::unique(User::class)->ignore($this->user()->id)
+            ];
+            $rules['course'] = ['required', 'string'];
+            $rules['year_level'] = ['required', 'integer', 'min:1', 'max:4'];
+        }
+
+        return $rules;
     }
 }

@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('enrollments', function (Blueprint $table) {
-            $table->text('notes')->nullable();
+            // Check if the deleted_at column doesn't exist before adding it
+            if (!Schema::hasColumn('enrollments', 'deleted_at')) {
+                $table->softDeletes();
+            }
         });
     }
 
@@ -22,7 +25,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('enrollments', function (Blueprint $table) {
-            $table->dropColumn('notes');
+            if (Schema::hasColumn('enrollments', 'deleted_at')) {
+                $table->dropSoftDeletes();
+            }
         });
     }
 }; 

@@ -12,7 +12,7 @@ class SubjectController extends Controller
 {
     public function index()
     {
-        $subjects = Subject::withCount('students')->latest()->paginate(10);
+        $subjects = Subject::latest()->paginate(10);
         return view('admin.subjects.index', compact('subjects'));
     }
 
@@ -35,8 +35,8 @@ class SubjectController extends Controller
 
     public function show(Subject $subject)
     {
-        $subject->load(['students' => function($query) {
-            $query->withPivot('status');
+        $subject->load(['enrollments.user' => function($query) {
+            $query->where('role', 'student');
         }]);
         return view('admin.subjects.show', compact('subject'));
     }
@@ -61,7 +61,8 @@ class SubjectController extends Controller
     public function destroy(Subject $subject)
     {
         try {
-            if ($subject->students()->exists()) {
+            // Check if the subject has any enrollments through the pivot table
+            if ($subject->enrollments()->exists()) {
                 return back()->with('error', 'Cannot delete subject with enrolled students.');
             }
             

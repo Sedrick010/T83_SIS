@@ -1,35 +1,61 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Student Dashboard') }}
-        </h2>
-    </x-slot>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <h3 class="text-lg font-semibold mb-4">Your Enrollments</h3>
-                    @if($enrollments->isEmpty())
-                        <p>You are not enrolled in any subjects yet.</p>
-                    @else
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            @foreach($enrollments as $enrollment)
-                                <div class="p-4 border rounded-lg">
-                                    <h4 class="font-semibold">{{ $enrollment->subject->code }}</h4>
-                                    <p class="text-sm">{{ $enrollment->subject->name }}</p>
-                                    <p class="text-xs text-gray-500">{{ $enrollment->academic_year }} - {{ $enrollment->semester }}</p>
-                                </div>
-                            @endforeach
-                        </div>
-                        <div class="mt-6">
-                            <a href="{{ route('student.grades') }}" class="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                                View My Grades
-                            </a>
-                        </div>
-                    @endif
+@extends('layouts.studentTemplate')
+@section('title', 'Dashboard')
+@section('content')
+<div class="row">
+    <!-- Current Enrollments -->
+    <div class="col-12">
+        <div class="card my-4">
+            <div class="card-header p-0 position-relative mt-n4 mx-3 z-index-2">
+                <div class="bg-gradient-primary shadow-primary border-radius-lg pt-4 pb-3">
+                    <h6 class="text-white text-capitalize ps-3 mb-0">Current Enrollments</h6>
+                </div>
+            </div>
+            <div class="card-body px-0 pb-2">
+                <div class="table-responsive p-0">
+                    <table class="table align-items-center mb-0">
+                        <thead>
+                            <tr>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Subject</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Units</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Academic Year</th>
+                                <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Semester</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($currentEnrollments as $enrollment)
+                                @foreach($enrollment->subjects as $subject)
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex px-3 py-1">
+                                                <div class="d-flex flex-column justify-content-center">
+                                                    <h6 class="mb-0 text-sm">{{ $subject->code }}</h6>
+                                                    <p class="text-xs text-secondary mb-0">{{ $subject->name }}</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ $subject->units }}</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ $enrollment->academic_year }}</p>
+                                        </td>
+                                        <td>
+                                            <p class="text-xs font-weight-bold mb-0">{{ $enrollment->semester }}</p>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center">
+                                        <p class="text-sm mb-0">No current enrollments found.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
-</x-app-layout> 
+</div>
+@endsection 
